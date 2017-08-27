@@ -3,13 +3,13 @@ import { StyleSheet, Text, View, FlatList, Button, Picker, TextInput,
   ActivityIndicator, ListView, Alert } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 
-const ENDPOINT = 'http://localhost:8081'
-const DEBUG = true
+const ENDPOINT = 'http://192.168.2.59:8080'
+const DEBUG = false
 
-const TokenAmountMax = 10000
-const TokenAmountInitial = 100
-const TokenPriceMax = 1000
-const TokenPriceInitial = 100
+const TokenAmountMax = 20
+const TokenAmountInitial = 10
+const TokenPriceMax = 20
+const TokenPriceInitial = 10
 
 class Login extends React.Component {
   static navigationOptions = {
@@ -41,12 +41,13 @@ class Login extends React.Component {
     }
     //!! debug mode
 
-    return fetch(ENDPOINT + '/general/getAllAccounts')
+    return fetch(ENDPOINT + '/general/getAccounts')
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
-          accounts: responseJson.accounts,
+          accounts: responseJson,
+          userAddress: responseJson && responseJson.length > 0 ? responseJson[0] : null,
           isLoading: false
         })
       })
@@ -75,6 +76,7 @@ class Login extends React.Component {
         <View style={{flexDirection: 'row'}}>
           <View style={{flex: 1}}>
             <Picker style={Styles.picker2}
+               selectedValue={this.state.userAddress}
                onValueChange={(userAddress) => this.setState({userAddress})}>
               {this.state.accounts.map((i) => {
                 return <Picker.Item key={i} value={i} label={i}/>
@@ -82,10 +84,7 @@ class Login extends React.Component {
             </Picker>
           </View>
         </View>
-        <Button style={Styles.item} onPress={() => 
-          if (this.state.userAddress) {
-            navigate('Home', { userAddress: this.state.userAddress })} title={'Login'}
-          }
+        <Button style={Styles.item} onPress={() => { if (this.state.userAddress) { navigate('Home', { userAddress: this.state.userAddress })}}} title={'Login'}
         />
       </View>
     )
@@ -111,8 +110,8 @@ class Home extends React.Component {
     return (
       <View style={Styles.container}>
         <Button style={Styles.item} onPress={() => navigate('Profile', { userAddress: params.userAddress })} title={'Profile'}/>
-        <Button style={Styles.item} onPress={() => navigate('Investments', { userAddress: params.userAddress })} title={'Investments'}/>
-        <Button style={Styles.item} onPress={() => navigate('Search', { userAddress: params.userAddress })} title={'Search'}/>
+        <Button style={Styles.item} onPress={() => navigate('InvestorContracts', { userAddress: params.userAddress })} title={'Investments'}/>
+        <Button style={Styles.item} onPress={() => navigate('ContractSearch', { userAddress: params.userAddress })} title={'Search'}/>
       </View>
     )
   }
@@ -131,8 +130,7 @@ class Profile extends React.Component {
     super(props);
     this.state = {
       isLoading: true,
-      contracts: [],
-      totalBalance: 0
+      contracts: []
     }
   }
 
@@ -140,9 +138,9 @@ class Profile extends React.Component {
     //!! debug mode
     if (DEBUG) {
       this.setState({
-        isLoading false,
-        contracts: [{ 'address': 'dEDWdfdf', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
-          'tokenAmount': 10, 'tokenPrice': 1.23 }, { 'address': 'dsdfsdf', tokenTitle': 'Title 2', 'tokenDescription': 'Description 2', 
+        isLoading: false,
+        contracts: [{ 'address': 'dEDWdfdf', 'tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+          'tokenAmount': 10, 'tokenPrice': 1.23 }, { 'address': 'dsdfsdf', 'tokenTitle': 'Title 2', 'tokenDescription': 'Description 2', 
           'tokenAmount': 20, 'tokenPrice': 2.23 }]
       })
       return
@@ -151,22 +149,17 @@ class Profile extends React.Component {
 
     const { params } = this.props.navigation.state
 
-    return fetch(ENDPOINT + '/general/getContracts', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          address: params.userAddress
-        })
-      })
+    if (!params || !params.userAddress) {
+      return
+    }
+
+    return fetch(ENDPOINT + '/humanworkerfactory/getContractsByOwner?address=' + params.userAddress)
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
           isLoading: false,
-          contracts: responseJson.contracts
+          contracts: responseJson
         });
       })
       .catch((error) => {
@@ -199,14 +192,13 @@ class Profile extends React.Component {
     const { params } = this.props.navigation.state
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText1}>Total Balance:</Text>
-        <Text style={Styles.baseText3}>{this.state.totalBalance}</Text>
         <Text style={Styles.baseText4}>Contracts:</Text>
         <FlatList style={Styles.list}
           data={this.state.contracts}
-          renderItem={({contract}) => 
-            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: contract.address, userAddress: params.userAddress })} title={contract.tokenTitle + ' ' + contract.tokenAmount}/>
+          renderItem={({item}) => 
+            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: item.tokenAddress, userAddress: params.userAddress })} title={item.tokenName + ' ' + item.description}/>
           }
+          keyExtractor={(item, index) => index}
         />
         <Button style={Styles.item} onPress={() => navigate('CreateContract', { userAddress: params.userAddress })} title={'New Contract'}/>
       </View>
@@ -234,16 +226,21 @@ class CreateContract extends React.Component {
     for (var i=1; i<=TokenPriceMax; i++) {
       tokenPriceList.push(i)
     }
+    console.log(tokenAmountList)
+    console.log(tokenPriceList)
     this.state = {
       isLoading: false,
+      description: '',
       tokenAmountList: tokenAmountList,
       tokenAmount: TokenAmountInitial,
-      tokenPriceList: TokenPriceList,
-      tokenPrice: TokenPriceInitial
+      tokenAmountSelected: 1,
+      tokenPriceList: tokenPriceList,
+      tokenPrice: TokenPriceInitial,
+      tokenPriceSelected: 1
     }
   }
 
-  onContractCreate(tokenAmount, tokenPrice, tokenTitle, tokenDescription) {
+  onContractCreate(tokenAmount, tokenPrice, description) {
     // check if some other action is currently processing
     if (this.state.isLoading) {
       Alert.alert(
@@ -267,11 +264,9 @@ class CreateContract extends React.Component {
     //!! debug mode
     if (DEBUG) {
       console.log({
-        userAddress: params.userAddress,
-        tokenTitle: tokenTitle,
-        tokenDescription: tokenDescription,
-        tokenAmount: tokenAmount,
-        tokenPrice: tokenPrice
+        description: description,
+        fromAddress: params.userAddress,
+        identity: params.userAddress
       })
       return
     }
@@ -281,18 +276,16 @@ class CreateContract extends React.Component {
     this.setState({
       isLoading: true
     }, () => {
-      return fetch(ENDPOINT + '/general/createContract', {
+      return fetch(ENDPOINT + '/humanworkerfactory/createHumanWorker', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userAddress: params.userAddress,
-          tokenTitle: tokenTitle,
-          tokenDescription: tokenDescription,
-          tokenAmount: tokenAmount,
-          tokenPrice: tokenPrice
+          description: description,
+          fromAddress: params.userAddress,
+          identity: params.userAddress
         })
       })
       .then((response) => response.json())
@@ -303,13 +296,14 @@ class CreateContract extends React.Component {
         }, () => {
           Alert.alert(
             'Success',
-            'Tokens pay out!',
+            'Contract created!',
             [
               {text: 'OK', onPress: () => navigate('Profile')}
             ],
             { cancelable: false }
           )
-          navigate('Contract', {contractAddress: responseJson.address})
+          console.log(responseJson)
+          navigate('Contract', {contractAddress: responseJson.workToken})
         })
       })
       .catch((error) => {
@@ -319,7 +313,7 @@ class CreateContract extends React.Component {
         }, () => {
           Alert.alert(
             'Error',
-            'Tokens could not be pay out! Please try again.',
+            'Contract could not be created! Please try again.',
             [
               {text: 'OK', onPress: () => console.log('OK Pressed')}
             ],
@@ -341,35 +335,33 @@ class CreateContract extends React.Component {
 
     const { params } = this.props.navigation.state;
     const { navigate } = this.props.navigation;
+
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Link to EtherDelta</Text>
-        <Text style={Styles.baseText4}>Token Title</Text>
-        <Text style={Styles.baseText4}>Token Description</Text>
-        <Text style={Styles.baseText4}>Number of Tokens</Text>
         <View style={{flexDirection: 'row'}}>
           <View style={{flex: 1}}>
             <Picker style={Styles.picker2}
-               onValueChange={(tokenAmount) => this.setState({tokenAmount})}>
+               selectedValue={this.state.tokenAmountSelected}
+               onValueChange={(tokenAmountSelected) => this.setState({tokenAmountSelected})}>
               {this.state.tokenAmountList.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
+                return <Picker.Item key={i} value={i} label={String(i)}/>
               })}
             </Picker>
           </View>
         </View>
-        <Text style={Styles.baseText4}>Price per Token</Text>
         <View style={{flexDirection: 'row'}}>
           <View style={{flex: 1}}>
             <Picker style={Styles.picker2}
-               onValueChange={(tokenPrice) => this.setState({tokenPrice})}>
+               selectedValue={this.state.tokenPriceSelected}
+               onValueChange={(tokenPriceSelected) => this.setState({tokenPriceSelected})}>
               {this.state.tokenPriceList.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
+                return <Picker.Item key={i} value={i} label={String(i)}/>
               })}
             </Picker>
           </View>
         </View>
-        <Button style={Styles.item} onPress={() => this.onContractCreate(this.state.tokenAmount, 
-          this.state.tokenPrice, this.state.tokenTitle, this.state.tokenDescription)} title={'Create Token'}/>
+        <Button style={Styles.item} onPress={() => this.onContractCreate(this.state.tokenAmountSelected, 
+          this.state.tokenPriceSelected, this.state.description)} title={'Create Token'}/>
       </View>
     );
   }
@@ -393,12 +385,12 @@ class Contract extends React.Component {
     }
   }
 
- componentDidMount() {
+  componentDidMount() {
     //!! debug mode
     if (DEBUG) {
       this.setState({
-        isLoading false,
-        contract: { 'address': 'dEDWDE', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+        isLoading: false,
+        contract: { 'address': 'dEDWDE', 'tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
           'tokenAmount': 10, 'tokenPrice': 1.23 }
       })
       return
@@ -407,23 +399,18 @@ class Contract extends React.Component {
 
     const { params } = this.props.navigation.state
 
-    return fetch(ENDPOINT + '/general/getContractById', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          address: params.contractAddress
-        })
-      })
+    if (!params || !params.contractAddress) {
+      return
+    }
+
+    return fetch(ENDPOINT + '/humanworkerfactory/getContractByAddress?address=' + params.contractAddress)
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
           isLoading: false,
-          contract: responseJson.contract
-        });
+          contract: responseJson
+        })
       })
       .catch((error) => {
         console.log(error);
@@ -455,15 +442,11 @@ class Contract extends React.Component {
     const { navigate } = this.props.navigation;
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Link to EtherDelta</Text>
-        <Text style={Styles.baseText4}>Token Public Key</Text>
-        <Text style={Styles.baseText4}>{this.state.contract.address}<</Text>
-        <Text style={Styles.baseText4}>Token Title</Text>
-        <Text style={Styles.baseText4}>{this.state.contract.tokenTitle}<</Text>
+        <Text style={Styles.baseText4}>Link to EtherDelta: https://etherscan.io/token/{this.state.contract.tokenAddress}</Text>
         <Text style={Styles.baseText4}>Token Description</Text>
-        <Text style={Styles.baseText4}>{this.state.contract.tokenDescription}<</Text>
+        <Text style={Styles.baseText4}>{this.state.contract.description}</Text>
         <Text style={Styles.baseText4}>Number of Tokens</Text>
-        <Text style={Styles.baseText4}>{this.state.contract.tokenAmount}<</Text>
+        <Text style={Styles.baseText4}>{this.state.contract.tokenAmount}</Text>
         <Text style={Styles.baseText4}>Price per Token</Text>
         <Text style={Styles.baseText4}>{this.state.contract.tokenPrice}</Text>
       </View>
@@ -486,67 +469,38 @@ class ContractSearch extends React.Component {
     this.state = {
       isLoading: true,
       contracts: [],
+      filteredContracts: [],
       searchTerm: ''
     }
   }
 
   componentDidMount() {
     // fetch all contracts
-    this.onSearch(this.state.searchTerm)
-  }
 
-  onSearch(searchTerm) {
     //!! debug mode
     if (DEBUG) {
       this.setState({
         isLoading: false,
-        contracts: [{ 'address': 'dEDWDE', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
-          'tokenAmount': 10, 'tokenPrice': 1.23 }, { 'address': 'dEDWDE', tokenTitle': 'Title 2', 'tokenDescription': 'Description 2', 
-          'tokenAmount': 20, 'tokenPrice': 2.23 }],
-        searchTerm: ''
+        contracts: [{ 'address': 'dEDWDE', 'tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+          'tokenAmount': 10, 'tokenPrice': 1.23 }, { 'address': 'dEDWDE', 'tokenTitle': 'Title 2', 'tokenDescription': 'Description 2', 
+          'tokenAmount': 20, 'tokenPrice': 2.23 }]
       })
       return
     }
     //!! debug mode
-
-    // check if some other action is currently processing
-    if (this.state.isLoading) {
-      Alert.alert(
-        'Warning',
-        'Some other action is currently processing! Please try again in a few seconds.',
-        [
-          {text: 'OK', onPress: () => console.log('OK Pressed')}
-        ],
-        { cancelable: false }
-      )
-      return
-    }
-
-    //////
-    // push to server
-    //////
 
     const { navigate } = this.props.navigation
     const { params } = this.props.navigation.state
 
     // fetch all contracts
-    return fetch(ENDPOINT + '/general/getAllContracts', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          searchTerm: searchTerm
-        })
-      })
+    return fetch(ENDPOINT + '/humanworkerfactory/getContracts')
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
           isLoading: false,
-          contracts: responseJson.contracts,
-          searchTerm: ''
+          contracts: responseJson,
+          filteredContracts: responseJson
         });
       })
       .catch((error) => {
@@ -566,6 +520,10 @@ class ContractSearch extends React.Component {
       });
   }
 
+  onSearch(searchTerm) {
+    
+  }
+
   render() {
     if (this.state.isLoading) {
       return (
@@ -581,10 +539,11 @@ class ContractSearch extends React.Component {
       <View style={Styles.container}>
         <Text style={Styles.baseText4}>Search Term</Text>
         <FlatList style={Styles.list}
-          data={this.state.contracts}
-          renderItem={({contract}) => 
-            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: contract.address })} title={contract.tokenTitle + ' ' + contract.tokenAmount}/>
+          data={this.state.filteredContracts}
+          renderItem={({item}) => 
+            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: item.address })} title={item.tokenName + ' ' + item.description}/>
           }
+          keyExtractor={(item, index) => index}
         />
       </View>
     );
@@ -613,7 +572,7 @@ class InvestorContracts extends React.Component {
     if (DEBUG) {
       this.setState({
         isLoading: false,
-        contracts: [{ 'address': 'dEDWDE', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+        contracts: [{ 'address': 'dEDWDE', 'tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
           'tokenAmount': 10, 'tokenPrice': 1.23 }]
       })
       return
@@ -622,22 +581,13 @@ class InvestorContracts extends React.Component {
 
     const { params } = this.props.navigation.state
 
-    return fetch(ENDPOINT + '/general/getAllContractsForInvestor', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userAddress: params.userAddress
-        })
-      })
+    return fetch(ENDPOINT + '/humanworkerfactory/getAllContractsForInvestor?address=' + params.userAddress)
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
           isLoading: false,
-          contracts: responseJson.contracts
+          contracts: responseJson
         })
       })
       .catch((error) => {
@@ -673,9 +623,10 @@ class InvestorContracts extends React.Component {
         <Text style={Styles.baseText4}>Investments:</Text>
         <FlatList style={Styles.list}
           data={this.state.contracts}
-          renderItem={({contract}) => 
-            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: contract.address })} title={contract.tokenTitle + ' ' + contract.tokenAmount}/>
+          renderItem={({item}) => 
+            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: item.tokenAddress })} title={item.tokenName + ' ' + item.description}/>
           }
+          keyExtractor={(item, index) => index}
         />
       </View>
     );
@@ -686,8 +637,7 @@ export default App = StackNavigator({
   Login: { screen: Login },
   Home: { screen: Home },
   Profile: { screen: Profile },
-  Investments: { screen: Investments },
-  Search: { screen: Search },
+  InvestorContracts: { screen: InvestorContracts },
   Contract: { screen: Contract },
   CreateContract: { screen: CreateContract },
   ContractSearch: { screen: ContractSearch },
@@ -697,7 +647,7 @@ export default App = StackNavigator({
 const Styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f7b843',
+    backgroundColor: '#ffffff',
     flexDirection: 'column',
     justifyContent: 'space-between',
     alignItems: 'center',
