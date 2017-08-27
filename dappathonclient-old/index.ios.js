@@ -4,7 +4,7 @@ import { AppRegistry, StyleSheet, ActivityIndicator, FlatList, Alert, Linking, T
 import { Examples, Button, Text, View, TextInput, Divider, Caption, Icon, Row, Image, Subtitle } from '@shoutem/ui';
 
 const ENDPOINT = 'http://192.168.2.59:8080'
-const DEBUG = false
+const DEBUG = true
 
 const TokenAmountMax = 20
 const TokenAmountInitial = 10
@@ -151,6 +151,10 @@ class Profile extends React.Component {
   render() {
     const { navigate } = this.props.navigation
     const { params } = this.props.navigation.state
+
+    if (!params || !params.userAddress) {
+      return
+    }
 
     return (
       <View>
@@ -350,11 +354,12 @@ class CreateContract extends React.Component {
             'Success',
             'Contract created!',
             [
-              {text: 'OK', onPress: () => navigate('CreateContractConfirm', {contractAddress: responseJson.workToken, userAddress: params.userAddress})}
+              {text: 'OK', onPress: () => navigate('Profile')}
             ],
             { cancelable: false }
           )
           console.log(responseJson)
+          navigate('CreateContractConfirm', {contractAddress: responseJson.workToken, userAddress: params.userAddress})
         })
       })
       .catch((error) => {
@@ -566,19 +571,23 @@ class Contract extends React.Component {
           <Caption>OWNER IDENTITY</Caption>
         </Divider>
         <TextInput editable={false} defaultValue={this.state.contract.ownerAddress}/>
+        <Divider />
         <Divider styleName="section-header">
           <Caption>CONTRACT DESCRIPTION</Caption>
         </Divider>
         <TextInput
           editable={false}
+          style={{ height: 100 }}
           defaultValue={this.state.contract.description}
         />
+        <Divider />
         <Divider styleName="section-header">
           <Caption>OWNER PROFILE & TRADING</Caption>
         </Divider>
         <Button styleName="dark" onPress={() => navigate('Profile', { userAddress: this.state.contract.ownerAddress })}>
           <Text>Show Owner Profile</Text>
         </Button>
+        <Divider />
         <Button styleName="dark" onPress={() => { 
           Linking.canOpenURL('https://etherscan.io/token/' + this.state.contract.tokenAddress).then(supported => {
             if (supported) {
@@ -596,15 +605,6 @@ class Contract extends React.Component {
           });
         }}>
           <Text>Go To EtherDelta</Text>
-        </Button>
-        <Divider styleName="section-header">
-          <Caption>Buy Tokens</Caption>
-        </Divider>
-        <TextInput
-          defaultValue={'1'}
-        />
-        <Button styleName="dark">
-          <Text>Buy Tokens</Text>
         </Button>
       </View>
     );
