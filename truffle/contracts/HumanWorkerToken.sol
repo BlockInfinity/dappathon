@@ -6,9 +6,6 @@ contract HumanWorkerToken is HumanStandardToken(2**256-1,"HumanWorkerToken",100,
 
 	string public description; 
 	address public owner; 
-
-	// ####################### Events 
-	event RefundedEvent(address _investor, uint _value);
 	
     // ####################### Constructor 
 	function HumanWorkerToken(string _description) {

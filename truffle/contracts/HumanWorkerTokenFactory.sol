@@ -7,7 +7,7 @@ contract HumanWorkerTokenFactory {
     address[] public contracts;
     string public proofOfIdentity;
 
-    event HumanWorkerTokenCreated(address _workToken);
+    event HumanWorkerTokenCreated(address _workToken, address _from);
 
     function HumanWorkerTokenFactory(string _proofOfIdentity) {
     	proofOfIdentity = _proofOfIdentity;
@@ -16,7 +16,7 @@ contract HumanWorkerTokenFactory {
     function createHumanWorker(string _description) {
         address workToken = new HumanWorkerToken(_description);
         contracts.push(workToken);
-        HumanWorkerTokenCreated(workToken);
+        HumanWorkerTokenCreated(workToken, msg.sender);
     }
 
     function getContracts() constant returns(address[]) {

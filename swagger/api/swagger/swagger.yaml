@@ -19,34 +19,159 @@ produces:
   - application/json
 paths:
 
-  /info/getAccounts:
+  /general/getAccounts:
     # binds a127 app logic to a route
     x-swagger-router-controller: info
     get:
       tags:
-        - info
-        
-      description: " "
+        - general
+      description: ""
       # used as the method name of the controller
-      operationId: getAccounts
+      operationId: getAccounts              
       responses:
         '200':
-          description: test
+          description: ""
           schema:
-            type: object
+            type: array
+            items:
+              type: string
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+          
+  /humanworkerfactory/createHumanWorker:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: info
+    post:
+      tags:
+        - humanworkerfactory
+      description: ""
+      # used as the method name of the controller
+      operationId: createHumanWorker
+      parameters:
+        - name: "para"
+          in: "body"
+          schema:
             properties:
-              account:
+              description:
                 type: string
-              convertlib:
+              fromAddress:
+                type: string  
+              fromName:
+                type: string 
+      responses:
+        '200':
+          description: ""
+          schema:
+            properties:
+              workToken:
                 type: string
-              metacoin:
+              from:
                 type: string
         # responses may fall through to errors
         default:
           description: Error
           schema:
-            $ref: "#/definitions/ErrorResponse"                                                                                           
-                                                                                  
+            $ref: "#/definitions/ErrorResponse"     
+
+  /humanworkerfactory/getContracts:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: info
+    get:
+      tags:
+        - humanworkerfactory
+      description: ""
+      # used as the method name of the controller
+      operationId: getContracts
+      responses:
+        '200':
+          description: ""
+          schema:
+            type: array
+            items:
+              properties:                           
+                tokenAddress:
+                  type: string
+                tokenName:
+                  type: string
+                description:
+                  type: string
+                ownerName:
+                  type: string
+                ownerAddress:
+                  type: string                                                
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"  
+
+  /humanworkertoken/transfer:
+    post:
+      tags: 
+        - humanworkertoken 
+      description: "Überträgt Anteile vom ESToken auf anderen Teilnehmer"
+      operationId: "transfer"
+      parameters:
+        - name: "para"
+          in: "body"
+          schema:
+            properties:
+              from:
+                type: string
+              to:
+                type: string
+              volume:
+                type: number
+      responses:  
+        "200":
+          description: Success
+          schema: 
+            properties:          
+              from:
+                type: string
+              to:
+                type: string
+              value:
+                type: number                
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    x-swagger-router-controller: "info" 
+
+  /humanworkertoken/getTransfers:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: info
+    get:
+      tags:
+        - humanworkertoken
+      description: ""
+      # used as the method name of the controller
+      operationId: getTransfers
+      responses:
+        '200':
+          description: ""
+          schema:
+            type: array
+            items:
+              properties:                           
+                to:
+                  type: string
+                from:
+                  type: string
+                value:
+                  type: number                                                   
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"  
+
+
 
 
 # complex objects have schema definitions

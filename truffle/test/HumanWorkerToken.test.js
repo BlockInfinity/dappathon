@@ -5,34 +5,45 @@ const co = require('co');
 
 var HumanWorkerToken = artifacts.require("./HumanWorkerToken.sol");
 
-var metacoin;
+var workerToken;
 
 
 contract('HumanWorkerToken', function(accounts) {
 
     before(function() {
         return co(function*() {
-            metacoin = yield HumanWorkerToken.deployed();
+            workerToken = yield HumanWorkerToken.deployed();
         });
     });
 
-    it('This is how to get started', function(done) {
+    it('HumanWorkerToken is deployed', function(done) {
         var p1 = co(function*() {
-            metacoin = yield HumanWorkerToken.deployed();
-            assert(metacoin.address !== undefined, "HumanWorkerToken not deployed");
+            workerToken = yield HumanWorkerToken.deployed();
+            assert(workerToken.address !== undefined, "HumanWorkerToken not deployed");
         });
 
         p1.then(done());
     });
 
 
+
+    it('HumanWorkerToken parameters should be set', function() {
+        return co(function*() {
+            var _description = yield workerToken.description()
+            assert(_description == "testdescription");
+            var _sender = yield workerToken.owner();
+            assert(_sender == accounts[0]);
+        });
+
+    });
+
     // it('This is how you handle events', function(done) {
     //     var p1 = co(function*() {
-    //         yield metacoin.doSomething();
+    //         yield workerToken.doSomething();
     //     });
 
     //     var p2 = new Promise(function(resolve, reject) {
-    //         metacoin.SomethingHappenedEvent(function(error, result) {
+    //         workerToken.SomethingHappenedEvent(function(error, result) {
     //             if (!error) {
     //                 // console.log(result);
     //                 resolve(result);
