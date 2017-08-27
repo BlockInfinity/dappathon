@@ -452,13 +452,13 @@ class CreateContractConfirm extends React.Component {
           justifyContent: 'center',
           alignItems: 'center',
           }} onPress={() => {
-          Linking.canOpenURL('https://etherscan.io/token/' + params.contractAddress).then(supported => {
+          Linking.canOpenURL('https://etherdelta.github.io/#ETH-' + params.contractAddress).then(supported => {
             if (supported) {
-              Linking.openURL('https://etherscan.io/token/' + params.contractAddress);
+              Linking.openURL('https://etherdelta.github.io/#ETH-' + params.contractAddress);
             } else {
               Alert.alert(
                 'Error',
-                'Don\'t know how to open URI: https://etherscan.io/token/' + params.contractAddress,
+                'Don\'t know how to open URI: https://etherdelta.github.io/#ETH-' + params.contractAddress,
                 [
                   {text: 'OK', onPress: () => console.log('OK Pressed')}
                 ],
@@ -580,13 +580,13 @@ class Contract extends React.Component {
           <Text>Show Owner Profile</Text>
         </Button>
         <Button styleName="dark" onPress={() => { 
-          Linking.canOpenURL('https://etherscan.io/token/' + this.state.contract.tokenAddress).then(supported => {
+          Linking.canOpenURL('https://etherdelta.github.io/#ETH-' + this.state.contract.tokenAddress).then(supported => {
             if (supported) {
-              Linking.openURL('https://etherscan.io/token/' + this.state.contract.tokenAddress);
+              Linking.openURL('https://etherdelta.github.io/#ETH-' + this.state.contract.tokenAddress);
             } else {
               Alert.alert(
                 'Error',
-                'Don\'t know how to open URI: https://etherscan.io/token/' + this.state.contract.tokenAddress,
+                'Don\'t know how to open URI: https://etherdelta.github.io/#ETH-' + this.state.contract.tokenAddress,
                 [
                   {text: 'OK', onPress: () => console.log('OK Pressed')}
                 ],
