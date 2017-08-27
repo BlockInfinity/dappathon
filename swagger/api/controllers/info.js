@@ -44,13 +44,13 @@ module.exports = {
 
             var _description = req.swagger.params.para.value._description || "testdescription";
             var _from = req.swagger.params.para.value.fromAddress || defaultAccount;
-            var _ownerName = req.swagger.params.para.value.fromName || "Magnus";
+            var _ownerName = req.swagger.params.para.value.identity || "Magnus";
 
 
-      
-                factory.createHumanWorker(_description, { from: _from, gas: 4500000 });
 
-        
+            factory.createHumanWorker(_description, { from: _from, gas: 4500000 });
+
+
 
 
             factory.HumanWorkerTokenCreated(function(err, result) {
@@ -95,7 +95,7 @@ module.exports = {
             var _to = req.swagger.params.para.value.to || defaultAccount1;
             var _volume = req.swagger.params.para.value.volume || 10;
 
-            humanWorker.transfer(_to, _volume, { from: _from});
+            humanWorker.transfer(_to, _volume, { from: _from });
 
             humanWorker.Transfer(function(err, result) {
                 if (tmptxhashes.indexOf(result.transactionHash) > -1) {
@@ -108,7 +108,7 @@ module.exports = {
                     var _to = result.args._to;
                     var _from = result.args._from;
                     var _value = result.args._value;
-                    
+
                     dbTransfers.push({ to: _to, from: _from, value: _value });
 
                     // res.json({ contractRegister: _contractRegister, from: _from }));
@@ -133,8 +133,43 @@ module.exports = {
         }
     },
 
+    getContractsByOwner: function(req, res) {
+        try {
+            var _owner = req.swagger.params.address.value || defaultAccount;
 
+            let helper = [];
+            for (var i in dbContracts) {
+                if (dbContracts[i].ownerAddress == _owner) {
+                    helper.push(dbContracts[i]);
+                }
+            }
 
+            res.json(helper);
+
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(error.message);
+        }
+    },
+
+    getContractByAddress: function(req, res) {
+        try {
+            var _address = req.swagger.params.address.value || defaultAccount;
+
+            let helper;
+            for (var i in dbContracts) {
+                if (dbContracts[i].tokenAddress == _address) {
+                    helper = dbContracts[i];
+                }
+            }
+
+            res.json(helper);
+
+        } catch (error) {
+            res.statusCode = 500;
+            res.end(error.message);
+        }
+    },
 
 
 

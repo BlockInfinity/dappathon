@@ -59,7 +59,7 @@ paths:
                 type: string
               fromAddress:
                 type: string  
-              fromName:
+              identity:
                 type: string 
       responses:
         '200':
@@ -165,6 +165,78 @@ paths:
                   type: string
                 value:
                   type: number                                                   
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"  
+
+  /humanworkertoken/getContractsByOwner:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: info
+    get:
+      tags:
+        - humanworkerfactory
+      description: ""
+      # used as the method name of the controller
+      operationId: getContractsByOwner
+      parameters:
+        - name: "address"
+          in: "query"
+          type: string
+      responses:
+        '200':
+          description: ""
+          schema:
+            type: array
+            items:
+              properties:                           
+                tokenAddress:
+                  type: string
+                tokenName:
+                  type: string
+                description:
+                  type: string
+                ownerName:
+                  type: string
+                ownerAddress:
+                  type: string                                                   
+        # responses may fall through to errors
+        default:
+          description: Error
+          schema:
+            $ref: "#/definitions/ErrorResponse"  
+
+  /humanworkertoken/getContractByAddress:
+    # binds a127 app logic to a route
+    x-swagger-router-controller: info
+    get:
+      tags:
+        - humanworkerfactory
+      description: ""
+      # used as the method name of the controller
+      operationId: getContractByAddress
+      parameters:
+        - name: "address"
+          in: "query"
+          type: string
+      responses:
+        '200':
+          description: ""
+          schema:
+            type: array
+            items:
+              properties:                           
+                tokenAddress:
+                  type: string
+                tokenName:
+                  type: string
+                description:
+                  type: string
+                ownerName:
+                  type: string
+                ownerAddress:
+                  type: string                                                   
         # responses may fall through to errors
         default:
           description: Error
