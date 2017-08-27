@@ -1,0 +1,31 @@
+{
+	"name": "dappathonclient",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"test": "node node_modules/jest/bin/jest.js --watch",
+		"start": "react-native-scripts start",
+		"eject": "react-native-scripts eject",
+		"android": "react-native-scripts android",
+		"ios": "react-native-scripts ios"
+	},
+	"main": "./node_modules/react-native-scripts/build/bin/crna-entry.js",
+	"dependencies": {
+		"@shoutem/ui": "^0.21.3",
+		"react": "16.0.0-alpha.12",
+		"expo": "^20.0.0",
+		"react-native": "0.47.2",
+		"react-navigation": "^1.0.0-beta.11"
+	},
+	"devDependencies": {
+		"babel-jest": "20.0.3",
+		"babel-preset-react-native": "^2.1.0",
+		"jest": "20.0.4",
+		"react-test-renderer": "16.0.0-alpha.12",
+		"react-native-scripts": "1.2.1",
+		"jest-expo": "~20.0.0"
+	},
+	"jest": {
+		"preset": "react-native"
+	}
+}

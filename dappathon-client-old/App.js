@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, Text, View, FlatList, Button, Picker, TextInput, 
   ActivityIndicator, ListView, Alert } from 'react-native';
 import { StackNavigator } from 'react-navigation';
+import { Examples } from '@shoutem/ui';
+import { Font } from 'expo';
 
 const ENDPOINT = 'http://192.168.2.59:8080'
 const DEBUG = false
@@ -30,6 +32,20 @@ class Login extends React.Component {
   }
 
   componentDidMount() {
+    Font.loadAsync({
+      'Rubik-Black': require('./node_modules/@shoutem/ui/fonts/Rubik-Black.ttf'),
+      'Rubik-BlackItalic': require('./node_modules/@shoutem/ui/fonts/Rubik-BlackItalic.ttf'),
+      'Rubik-Bold': require('./node_modules/@shoutem/ui/fonts/Rubik-Bold.ttf'),
+      'Rubik-BoldItalic': require('./node_modules/@shoutem/ui/fonts/Rubik-BoldItalic.ttf'),
+      'Rubik-Italic': require('./node_modules/@shoutem/ui/fonts/Rubik-Italic.ttf'),
+      'Rubik-Light': require('./node_modules/@shoutem/ui/fonts/Rubik-Light.ttf'),
+      'Rubik-LightItalic': require('./node_modules/@shoutem/ui/fonts/Rubik-LightItalic.ttf'),
+      'Rubik-Medium': require('./node_modules/@shoutem/ui/fonts/Rubik-Medium.ttf'),
+      'Rubik-MediumItalic': require('./node_modules/@shoutem/ui/fonts/Rubik-MediumItalic.ttf'),
+      'Rubik-Regular': require('./node_modules/@shoutem/ui/fonts/Rubik-Regular.ttf'),
+      'rubicon-icon-font': require('./node_modules/@shoutem/ui/fonts/rubicon-icon-font.ttf'),
+    });
+
     // fetch all accounts
     //!! debug mode
     if (DEBUG) {
@@ -68,10 +84,12 @@ class Login extends React.Component {
       })
   }
 
+
   render() {
     const { navigate } = this.props.navigation;
     return (
       <View style={Styles.container}>
+        <Examples />
         <Text style={Styles.baseText4}>User Accounts:</Text>
         <View style={{flexDirection: 'row'}}>
           <View style={{flex: 1}}>
