@@ -1,16 +1,22 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatList, Button, Picker, TextInput, ActivityIndicator, ListView, Alert } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Button, Picker, TextInput, 
+  ActivityIndicator, ListView, Alert } from 'react-native';
 import { StackNavigator } from 'react-navigation';
 
 const ENDPOINT = 'http://localhost:8081'
+const DEBUG = true
+
+const TokenAmountMax = 10000
+const TokenAmountInitial = 100
+const TokenPriceMax = 1000
+const TokenPriceInitial = 100
 
 class Login extends React.Component {
   static navigationOptions = {
-    title: "Login",
-    headerTintColor: "#fff",
+    title: 'Login',
+    headerTintColor: '#ffffff',
     headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
+      backgroundColor: 'black'
     }
   }
 
@@ -19,45 +25,29 @@ class Login extends React.Component {
     this.state = {
       isLoading: true,
       accounts: [],
-      energySupplier: null
+      userAddress: null
     }
   }
 
   componentDidMount() {
     // fetch all accounts
+    //!! debug mode
+    if (DEBUG) {
+      this.setState({
+        isLoading: false,
+        accounts: ['uedue21223323', 'dwud3h2udh3ud']
+      })
+      return
+    }
+    //!! debug mode
+
     return fetch(ENDPOINT + '/general/getAllAccounts')
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
-          accounts: responseJson.accounts
-        }, () => {
-          // fetch energy supplier account
-          return fetch(ENDPOINT + '/general/getEnergySupplier')
-            .then((response) => response.json())
-
-            .then((responseJson) => {
-              console.log(responseJson)
-              this.setState({
-                isLoading: false,
-                energySupplier: responseJson.energysupplier
-              })
-            })
-            .catch((error) => {
-              console.log(error);
-              this.setState({
-                isLoading: false
-              }, function() {
-                Alert.alert(
-                  'Error',
-                  'An error occured while fetching energy supplier account! Please try again in a few seconds.',
-                  [
-                    {text: 'OK', onPress: () => console.log('OK Pressed')}
-                  ],
-                  { cancelable: false }
-                )
-              })
-            })
+          accounts: responseJson.accounts,
+          isLoading: false
         })
       })
       .catch((error) => {
@@ -78,33 +68,62 @@ class Login extends React.Component {
   }
 
   render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
     const { navigate } = this.props.navigation;
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText1}>Shareholder</Text>
-        <Button style={Styles.item} onPress={() => navigate('ShareholderHome', { shareholderAddress: this.state.accounts[0] })} title={'Go to Shareholder Home'}/>
-        <Text style={Styles.baseText1}>Energy Supplier</Text>
-        <Button style={Styles.item} onPress={() => navigate('EnergySupplierHome', { energySupplierAddress: this.state.energySupplier })} title={'Go to EnergySupplier Home'}/>
+        <Text style={Styles.baseText4}>User Accounts:</Text>
+        <View style={{flexDirection: 'row'}}>
+          <View style={{flex: 1}}>
+            <Picker style={Styles.picker2}
+               onValueChange={(userAddress) => this.setState({userAddress})}>
+              {this.state.accounts.map((i) => {
+                return <Picker.Item key={i} value={i} label={i}/>
+              })}
+            </Picker>
+          </View>
+        </View>
+        <Button style={Styles.item} onPress={() => 
+          if (this.state.userAddress) {
+            navigate('Home', { userAddress: this.state.userAddress })} title={'Login'}
+          }
+        />
       </View>
     )
   }
 }
 
-class ShareholderHome extends React.Component {
+class Home extends React.Component {
   static navigationOptions = {
-    title: "Shareholder Home",
-    headerTintColor: "#fff",
+    title: "Home",
+    headerTintColor: "#ffffff",
     headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
+      backgroundColor: 'black'
+    }
+  }
+
+  constructor(props) {
+    super(props)
+  }
+
+  render() {
+    const { navigate } = this.props.navigation
+    const { params } = this.props.navigation.state
+    return (
+      <View style={Styles.container}>
+        <Button style={Styles.item} onPress={() => navigate('Profile', { userAddress: params.userAddress })} title={'Profile'}/>
+        <Button style={Styles.item} onPress={() => navigate('Investments', { userAddress: params.userAddress })} title={'Investments'}/>
+        <Button style={Styles.item} onPress={() => navigate('Search', { userAddress: params.userAddress })} title={'Search'}/>
+      </View>
+    )
+  }
+}
+
+class Profile extends React.Component {
+  static navigationOptions = {
+    title: "Profile",
+    headerTintColor: "#ffffff",
+    headerStyle: {
+      backgroundColor: 'black'
     }
   }
 
@@ -112,62 +131,42 @@ class ShareholderHome extends React.Component {
     super(props);
     this.state = {
       isLoading: true,
-      balance: 0,
-      energySystemTokens: []
+      contracts: [],
+      totalBalance: 0
     }
   }
 
   componentDidMount() {
+    //!! debug mode
+    if (DEBUG) {
+      this.setState({
+        isLoading false,
+        contracts: [{ 'address': 'dEDWdfdf', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+          'tokenAmount': 10, 'tokenPrice': 1.23 }, { 'address': 'dsdfsdf', tokenTitle': 'Title 2', 'tokenDescription': 'Description 2', 
+          'tokenAmount': 20, 'tokenPrice': 2.23 }]
+      })
+      return
+    }
+    //!! debug mode
+
     const { params } = this.props.navigation.state
-    return fetch(ENDPOINT + '/general/getKwhTokenBalance', {
+
+    return fetch(ENDPOINT + '/general/getContracts', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          address: params.shareholderAddress
+          address: params.userAddress
         })
       })
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
-          balance: responseJson.balance
-        }, () => {
-          return fetch(ENDPOINT + '/shareholder/getAllMyEnergySystemTokens', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              yourAddress: params.shareholderAddress
-            })
-          })
-          .then((response) => response.json())
-          .then((responseJson) => {
-            console.log(responseJson)
-            this.setState({
-              isLoading: false,
-              energySystemTokens: responseJson
-            });
-          })
-          .catch((error) => {
-            console.log(error);
-            this.setState({
-              isLoading: false
-            }, function() {
-              Alert.alert(
-                'Error',
-                'An error occured while fetching all energy system tokens! Please try again in a few seconds.',
-                [
-                  {text: 'OK', onPress: () => console.log('OK Pressed')}
-                ],
-                { cancelable: false }
-              )
-            });
-          });
+          isLoading: false,
+          contracts: responseJson.contracts
         });
       })
       .catch((error) => {
@@ -177,7 +176,7 @@ class ShareholderHome extends React.Component {
         }, function() {
           Alert.alert(
             'Error',
-            'An error occured while fetching kwh token balance! Please try again in a few seconds.',
+            'An error occured while fetching contracts! Please try again in a few seconds.',
             [
               {text: 'OK', onPress: () => console.log('OK Pressed')}
             ],
@@ -200,48 +199,51 @@ class ShareholderHome extends React.Component {
     const { params } = this.props.navigation.state
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText1}>Virtueller Speicher:</Text>
-        <Text style={Styles.baseText3}>{this.state.balance}</Text>
-        <Text style={Styles.baseText4}>Beteiligungen:</Text>
+        <Text style={Styles.baseText1}>Total Balance:</Text>
+        <Text style={Styles.baseText3}>{this.state.totalBalance}</Text>
+        <Text style={Styles.baseText4}>Contracts:</Text>
         <FlatList style={Styles.list}
-          data={this.state.energySystemTokens}
-          renderItem={({item}) => 
-            <Button style={Styles.item} onPress={() => navigate('ShareholderEnergySystemToken', { energySystemToken: item, shareholderAddress: params.shareholderAddress })} title={'EnergySystemToken: ' + item.estoken + ' Share: ' + item.balance}/>
+          data={this.state.contracts}
+          renderItem={({contract}) => 
+            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: contract.address, userAddress: params.userAddress })} title={contract.tokenTitle + ' ' + contract.tokenAmount}/>
           }
         />
-        <Button style={Styles.item} onPress={() => navigate('ShareholderTransactions', { shareholderAddress: params.shareholderAddress })} title={'All Incomes'}/>
-        <Button style={Styles.item} onPress={() => navigate('ShareholderPayOutTokens', { shareholderAddress: params.shareholderAddress, balance: this.state.balance })} title={'Pay Out kWh-Tokens'}/>
-        <Button style={Styles.item} onPress={() => navigate('ShareholderSendTokens', { shareholderAddress: params.shareholderAddress, balance: this.state.balance })} title={'Send kWh-Tokens'}/>
+        <Button style={Styles.item} onPress={() => navigate('CreateContract', { userAddress: params.userAddress })} title={'New Contract'}/>
       </View>
     );
   }
 }
 
-class ShareholderPayOutTokens extends React.Component {
+class CreateContract extends React.Component {
   static navigationOptions = {
-    title: "ShareholderPayOutTokens",
-    headerTintColor: "#fff",
+    title: "Create Contract",
+    headerTintColor: "#ffffff",
     headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
+      backgroundColor: 'black' 
     }
   }
 
   constructor(props) {
     super(props)
     const { params } = props.navigation.state
-    let payoutValueList = []
-    for (var i = 1; i <= params.balance; i++) {
-      payoutValueList.push(i)
+    let tokenAmountList = []
+    for (var i=1; i<=TokenAmountMax; i++) {
+      tokenAmountList.push(i)
+    }
+    let tokenPriceList = []
+    for (var i=1; i<=TokenPriceMax; i++) {
+      tokenPriceList.push(i)
     }
     this.state = {
       isLoading: false,
-      payoutValueList: payoutValueList,
-      payoutValue: 0
+      tokenAmountList: tokenAmountList,
+      tokenAmount: TokenAmountInitial,
+      tokenPriceList: TokenPriceList,
+      tokenPrice: TokenPriceInitial
     }
   }
 
-  onPayOut(payoutValue) {
+  onContractCreate(tokenAmount, tokenPrice, tokenTitle, tokenDescription) {
     // check if some other action is currently processing
     if (this.state.isLoading) {
       Alert.alert(
@@ -262,19 +264,35 @@ class ShareholderPayOutTokens extends React.Component {
     const { navigate } = this.props.navigation
     const { params } = this.props.navigation.state
 
+    //!! debug mode
+    if (DEBUG) {
+      console.log({
+        userAddress: params.userAddress,
+        tokenTitle: tokenTitle,
+        tokenDescription: tokenDescription,
+        tokenAmount: tokenAmount,
+        tokenPrice: tokenPrice
+      })
+      return
+    }
+    //!! debug mode
+
     // -> request new insurance
     this.setState({
       isLoading: true
     }, () => {
-      return fetch(ENDPOINT + '/energysystemtoken/payout', {
+      return fetch(ENDPOINT + '/general/createContract', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          yourAddress: params.shareholderAddress,
-          value: payoutValue
+          userAddress: params.userAddress,
+          tokenTitle: tokenTitle,
+          tokenDescription: tokenDescription,
+          tokenAmount: tokenAmount,
+          tokenPrice: tokenPrice
         })
       })
       .then((response) => response.json())
@@ -287,11 +305,11 @@ class ShareholderPayOutTokens extends React.Component {
             'Success',
             'Tokens pay out!',
             [
-              {text: 'OK', onPress: () => navigate('InsurantHome')}
+              {text: 'OK', onPress: () => navigate('Profile')}
             ],
             { cancelable: false }
           )
-          navigate('ShareholderHome')
+          navigate('Contract', {contractAddress: responseJson.address})
         })
       })
       .catch((error) => {
@@ -325,85 +343,87 @@ class ShareholderPayOutTokens extends React.Component {
     const { navigate } = this.props.navigation;
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Value to Pay Out:</Text>
+        <Text style={Styles.baseText4}>Link to EtherDelta</Text>
+        <Text style={Styles.baseText4}>Token Title</Text>
+        <Text style={Styles.baseText4}>Token Description</Text>
+        <Text style={Styles.baseText4}>Number of Tokens</Text>
         <View style={{flexDirection: 'row'}}>
           <View style={{flex: 1}}>
             <Picker style={Styles.picker2}
-               onValueChange={(payoutValue) => this.setState({payoutValue})}>
-              {this.state.payoutValueList.map((i) => {
+               onValueChange={(tokenAmount) => this.setState({tokenAmount})}>
+              {this.state.tokenAmountList.map((i) => {
                 return <Picker.Item key={i} value={i} label={i}/>
               })}
             </Picker>
           </View>
         </View>
-        <Button style={Styles.item} onPress={() => this.onPayOut(this.state.payoutValue)} title={'Pay Out Tokens'}/>
+        <Text style={Styles.baseText4}>Price per Token</Text>
+        <View style={{flexDirection: 'row'}}>
+          <View style={{flex: 1}}>
+            <Picker style={Styles.picker2}
+               onValueChange={(tokenPrice) => this.setState({tokenPrice})}>
+              {this.state.tokenPriceList.map((i) => {
+                return <Picker.Item key={i} value={i} label={i}/>
+              })}
+            </Picker>
+          </View>
+        </View>
+        <Button style={Styles.item} onPress={() => this.onContractCreate(this.state.tokenAmount, 
+          this.state.tokenPrice, this.state.tokenTitle, this.state.tokenDescription)} title={'Create Token'}/>
       </View>
     );
   }
 }
 
-class ShareholderSendTokens extends React.Component {
+class Contract extends React.Component {
   static navigationOptions = {
-    title: "ShareholderSendTokens",
-    headerTintColor: "#fff",
+    title: "Contract",
+    headerTintColor: "#ffffff",
     headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
+      backgroundColor: 'black' 
     }
   }
 
   constructor(props) {
     super(props)
     const { params } = props.navigation.state
-    let sendValueList  = []
-    for (var i = 1; i <= params.balance; i++) {
-      sendValueList.push(i)
-    }
     this.state = {
-      isLoading: false,
-      sendValueList: sendValueList,
-      sendValue: 0,
-      sendTokenList: sendTokenList,
-      sendToken: null,
-      sendToList: sendToList,
-      sendTo: null
+      isLoading: true,
+      contract: null
     }
   }
 
-  componentDidMount() {
-    // fetch all accounts
-    return fetch(ENDPOINT + '/general/getAllAccounts')
+ componentDidMount() {
+    //!! debug mode
+    if (DEBUG) {
+      this.setState({
+        isLoading false,
+        contract: { 'address': 'dEDWDE', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+          'tokenAmount': 10, 'tokenPrice': 1.23 }
+      })
+      return
+    }
+    //!! debug mode
+
+    const { params } = this.props.navigation.state
+
+    return fetch(ENDPOINT + '/general/getContractById', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          address: params.contractAddress
+        })
+      })
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
-          sendToList: responseJson.accounts
-        }, () => {
-          // fetch all tokens
-          return fetch(ENDPOINT + '/general/getAllEnergySystemTokens')
-            .then((response) => response.json())
-            .then((responseJson) => {
-              console.log(responseJson)
-              this.setState({
-                sendTokenList: responseJson.estokens
-              })
-            })
-            .catch((error) => {
-              console.log(error);
-              this.setState({
-                isLoading: false
-              }, function() {
-                Alert.alert(
-                  'Error',
-                  'An error occured while fetching all tokens! Please try again in a few seconds.',
-                  [
-                    {text: 'OK', onPress: () => console.log('OK Pressed')}
-                  ],
-                  { cancelable: false }
-                )
-              })
-            })
-        })
+          isLoading: false,
+          contract: responseJson.contract
+        });
       })
       .catch((error) => {
         console.log(error);
@@ -412,17 +432,83 @@ class ShareholderSendTokens extends React.Component {
         }, function() {
           Alert.alert(
             'Error',
-            'An error occured while fetching all accounts! Please try again in a few seconds.',
+            'An error occured while fetching contracts! Please try again in a few seconds.',
             [
               {text: 'OK', onPress: () => console.log('OK Pressed')}
             ],
             { cancelable: false }
           )
-        })
-      })
+        });
+      });
   }
 
-  onSend(to, sendValue, estoken) {
+  render() {
+    if (this.state.isLoading) {
+      return (
+        <View style={{flex: 1, paddingTop: 20}}>
+          <ActivityIndicator />
+        </View>
+      );
+    }
+
+    const { params } = this.props.navigation.state;
+    const { navigate } = this.props.navigation;
+    return (
+      <View style={Styles.container}>
+        <Text style={Styles.baseText4}>Link to EtherDelta</Text>
+        <Text style={Styles.baseText4}>Token Public Key</Text>
+        <Text style={Styles.baseText4}>{this.state.contract.address}<</Text>
+        <Text style={Styles.baseText4}>Token Title</Text>
+        <Text style={Styles.baseText4}>{this.state.contract.tokenTitle}<</Text>
+        <Text style={Styles.baseText4}>Token Description</Text>
+        <Text style={Styles.baseText4}>{this.state.contract.tokenDescription}<</Text>
+        <Text style={Styles.baseText4}>Number of Tokens</Text>
+        <Text style={Styles.baseText4}>{this.state.contract.tokenAmount}<</Text>
+        <Text style={Styles.baseText4}>Price per Token</Text>
+        <Text style={Styles.baseText4}>{this.state.contract.tokenPrice}</Text>
+      </View>
+    );
+  }
+}
+
+class ContractSearch extends React.Component {
+  static navigationOptions = {
+    title: "Search Contracts",
+    headerTintColor: "#ffffff",
+    headerStyle: {
+      backgroundColor: 'black'
+    }
+  }
+
+  constructor(props) {
+    super(props)
+    const { params } = props.navigation.state
+    this.state = {
+      isLoading: true,
+      contracts: [],
+      searchTerm: ''
+    }
+  }
+
+  componentDidMount() {
+    // fetch all contracts
+    this.onSearch(this.state.searchTerm)
+  }
+
+  onSearch(searchTerm) {
+    //!! debug mode
+    if (DEBUG) {
+      this.setState({
+        isLoading: false,
+        contracts: [{ 'address': 'dEDWDE', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+          'tokenAmount': 10, 'tokenPrice': 1.23 }, { 'address': 'dEDWDE', tokenTitle': 'Title 2', 'tokenDescription': 'Description 2', 
+          'tokenAmount': 20, 'tokenPrice': 2.23 }],
+        searchTerm: ''
+      })
+      return
+    }
+    //!! debug mode
+
     // check if some other action is currently processing
     if (this.state.isLoading) {
       Alert.alert(
@@ -443,56 +529,41 @@ class ShareholderSendTokens extends React.Component {
     const { navigate } = this.props.navigation
     const { params } = this.props.navigation.state
 
-    // -> request new insurance
-    this.setState({
-      isLoading: true
-    }, () => {
-      return fetch(ENDPOINT + '/kwhtoken/transfer', {
+    // fetch all contracts
+    return fetch(ENDPOINT + '/general/getAllContracts', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          estoken: estoken,
-          value: sendValue,
-          from: params.shareholderAddress,
-          to: to
+          searchTerm: searchTerm
         })
       })
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
-          isLoading: false
-        }, () => {
-          Alert.alert(
-            'Success',
-            'Tokens send!',
-            [
-              {text: 'OK', onPress: () => navigate('InsurantHome')}
-            ],
-            { cancelable: false }
-          )
-          navigate('ShareholderHome')
-        })
+          isLoading: false,
+          contracts: responseJson.contracts,
+          searchTerm: ''
+        });
       })
       .catch((error) => {
-        console.log(error)
+        console.log(error);
         this.setState({
           isLoading: false
-        }, () => {
+        }, function() {
           Alert.alert(
             'Error',
-            'Tokens could not be sent! Please try again.',
+            'An error occured while fetching contracts! Please try again in a few seconds.',
             [
               {text: 'OK', onPress: () => console.log('OK Pressed')}
             ],
             { cancelable: false }
           )
-        })
+        });
       });
-    })
   }
 
   render() {
@@ -508,52 +579,24 @@ class ShareholderSendTokens extends React.Component {
     const { navigate } = this.props.navigation;
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Send To:</Text>
-        <View style={{flexDirection: 'row'}}>
-          <View style={{flex: 1}}>
-            <Picker style={Styles.picker2}
-               onValueChange={(sendTo) => this.setState({sendTo})}>
-              {this.state.sendToList.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
-              })}
-            </Picker>
-          </View>
-        </View>
-        <Text style={Styles.baseText4}>Value:</Text>
-        <View style={{flexDirection: 'row'}}>
-          <View style={{flex: 1}}>
-            <Picker style={Styles.picker2}
-               onValueChange={(sendValue) => this.setState({sendValue})}>
-              {this.state.sendValueList.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
-              })}
-            </Picker>
-          </View>
-        </View>
-        <Text style={Styles.baseText4}>Send to Token:</Text>
-        <View style={{flexDirection: 'row'}}>
-          <View style={{flex: 1}}>
-            <Picker style={Styles.picker2}
-               onValueChange={(sendToken) => this.setState({sendToken})}>
-              {this.state.sendTokenList.map((i) => {
-                return <Picker.Item key={sendToken.estoken} value={sendToken.estoken} label={sendToken.estoken}/>
-              })}
-            </Picker>
-          </View>
-        </View>
-        <Button style={Styles.item} onPress={() => this.onSend(this.state.sendTo, this.state.sendValue,this.state.sendToken)} title={'Send Tokens'}/>
+        <Text style={Styles.baseText4}>Search Term</Text>
+        <FlatList style={Styles.list}
+          data={this.state.contracts}
+          renderItem={({contract}) => 
+            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: contract.address })} title={contract.tokenTitle + ' ' + contract.tokenAmount}/>
+          }
+        />
       </View>
     );
   }
 }
 
-class ShareholderTransactions extends React.Component {
+class InvestorContracts extends React.Component {
   static navigationOptions = {
-    title: "Shareholder Transactions",
-    headerTintColor: "#fff",
+    title: "Investor Contracts",
+    headerTintColor: "#ffffff",
     headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
+      backgroundColor: 'black'
     }
   }
 
@@ -561,27 +604,40 @@ class ShareholderTransactions extends React.Component {
     super(props);
     this.state = {
       isLoading: true,
-      incomes: []
+      contracts: []
     }
   }
 
   componentDidMount() {
+    //!! debug mode
+    if (DEBUG) {
+      this.setState({
+        isLoading: false,
+        contracts: [{ 'address': 'dEDWDE', tokenTitle': 'Title 1', 'tokenDescription': 'Description 1', 
+          'tokenAmount': 10, 'tokenPrice': 1.23 }]
+      })
+      return
+    }
+    //!! debug mode
+
     const { params } = this.props.navigation.state
-    return fetch(ENDPOINT + '/shareholder/getAllMyEnergySystemIncomes', {
+
+    return fetch(ENDPOINT + '/general/getAllContractsForInvestor', {
         method: 'POST',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          yourAddress: params.shareholderAddress
+          userAddress: params.userAddress
         })
       })
       .then((response) => response.json())
       .then((responseJson) => {
         console.log(responseJson)
         this.setState({
-          incomes: responseJson
+          isLoading: false,
+          contracts: responseJson.contracts
         })
       })
       .catch((error) => {
@@ -614,807 +670,13 @@ class ShareholderTransactions extends React.Component {
     const { params } = this.props.navigation.state
     return (
       <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Incomes for Token:</Text>
+        <Text style={Styles.baseText4}>Investments:</Text>
         <FlatList style={Styles.list}
-          data={this.state.incomes}
-          renderItem={({item}) => 
-            <Text style={Styles.item} title={'Timestamp: ' + item.timestamp + ' Income: ' + item.income}/>
+          data={this.state.contracts}
+          renderItem={({contract}) => 
+            <Button style={Styles.item} onPress={() => navigate('Contract', { contractAddress: contract.address })} title={contract.tokenTitle + ' ' + contract.tokenAmount}/>
           }
         />
-      </View>
-    );
-  }
-}
-
-class ShareholderEnergySystemToken extends React.Component {
-  static navigationOptions = {
-    title: "EnergySystemToken Details",
-    headerTintColor: "#fff",
-    headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
-    }
-  }
-
-  constructor(props) {
-    super(props)
-    const { params } = props.navigation.state
-    let transferValueList  = []
-    for (var i = 1; i <= params.energySystemToken.balance; i++) {
-      transferValueList.push(i)
-    }
-    this.state = {
-      isLoading: false,
-      transferToList: [],
-      transferValueList: transferValueList,
-      transferTo: null,
-      transferValue: null
-    }
-  }
-
-  componentDidMount() {
-    // fetch all accounts
-    return fetch(ENDPOINT + '/general/getAllAccounts')
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          transferToList: responseJson.accounts
-        })
-      })
-      .catch((error) => {
-        console.log(error);
-        this.setState({
-          isLoading: false
-        }, function() {
-          Alert.alert(
-            'Error',
-            'An error occured while fetching all accounts! Please try again in a few seconds.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        })
-      })
-  }
-
-  onTransfer(to, value) {
-    // check if some other action is currently processing
-    if (this.state.isLoading) {
-      Alert.alert(
-        'Warning',
-        'Some other action is currently processing! Please try again in a few seconds.',
-        [
-          {text: 'OK', onPress: () => console.log('OK Pressed')}
-        ],
-        { cancelable: false }
-      )
-      return
-    }
-
-    //////
-    // push to server
-    //////
-
-    const { navigate } = this.props.navigation
-    const { params } = this.props.navigation.state
-
-    // -> request new insurance
-    this.setState({
-      isLoading: true
-    }, () => {
-      return fetch(ENDPOINT + '/energysystemtoken/transfer', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          yourAddress: params.energySystemToken.estoken,
-          from: params.shareholderAddress,
-          to: to,
-          value: value
-        })
-      })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          isLoading: false
-        }, () => {
-          Alert.alert(
-            'Success',
-            'Tokens transfered!',
-            [
-              {text: 'OK', onPress: () => navigate('InsurantHome')}
-            ],
-            { cancelable: false }
-          )
-          navigate('ShareholderHome')
-        })
-      })
-      .catch((error) => {
-        console.log(error)
-        this.setState({
-          isLoading: false
-        }, () => {
-          Alert.alert(
-            'Error',
-            'Tokens could not be transfered! Please try again.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        })
-      });
-    })
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
-    const { params } = this.props.navigation.state;
-    const { navigate } = this.props.navigation;
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Transfer To:</Text>
-        <View style={{flexDirection: 'row'}}>
-          <View style={{flex: 1}}>
-            <Picker style={Styles.picker2}
-               onValueChange={(transferTo) => this.setState({transferTo})}>
-              {this.state.transferToList.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
-              })}
-            </Picker>
-          </View>
-        </View>
-        <Text style={Styles.baseText4}>Value:</Text>
-        <View style={{flexDirection: 'row'}}>
-          <View style={{flex: 1}}>
-            <Picker style={Styles.picker2}
-               onValueChange={(transferValue) => this.setState({transferValue})}>
-              {this.state.transferValueList.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
-              })}
-            </Picker>
-          </View>
-        </View>
-        <Button style={Styles.item} onPress={() => this.onTransfer(this.state.transferTo, this.state.transferValue)} title={'Transfer Tokens'}/>
-        <Button style={Styles.item} onPress={() => navigate('ShareholderTokenTransactions', { energySystemToken: params.energySystemToken, shareholderAddress: params.shareholderAddress })} title={'Transaction History'}/>
-      </View>
-    );
-  }
-}
-
-class ShareholderTokenTransactions extends React.Component {
-  static navigationOptions = {
-    title: "ShareholderTokenTransactions",
-    headerTintColor: "#fff",
-    headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
-    }
-  }
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoading: true,
-      incomes: []
-    }
-  }
-
-  componentDidMount() {
-    const { params } = this.props.navigation.state
-    return fetch(ENDPOINT + '/shareholder/getAllMyEnergySystemIncomes', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          yourAddress: params.shareholderAddress,
-          estoken: params.energySystemToken.estoken
-        })
-      })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          incomes: responseJson
-        })
-      })
-      .catch((error) => {
-        console.log(error);
-        this.setState({
-          isLoading: false
-        }, function() {
-          Alert.alert(
-            'Error',
-            'An error occured while fetching energy system incomes! Please try again in a few seconds.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        });
-      });
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
-    const { navigate } = this.props.navigation
-    const { params } = this.props.navigation.state
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Incomes for Token:</Text>
-        <FlatList style={Styles.list}
-          data={this.state.incomes}
-          renderItem={({item}) => 
-            <Text style={Styles.item} title={'Timestamp: ' + item.timestamp + ' Income: ' + item.income}/>
-          }
-        />
-      </View>
-    );
-  }
-}
-
-class EnergySupplierHome extends React.Component {
-  static navigationOptions = {
-    title: "EnergySupplier Home",
-    headerTintColor: "#fff",
-    headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
-    }
-  }
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoading: true,
-      balance: 0,
-      energySystemTokens: []
-    }
-  }
-
-  componentDidMount() {
-    const { params } = this.props.navigation.state
-    return fetch(ENDPOINT + '/general/getKwhTokenBalance', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          address: params.energySupplierAddress
-        })
-      })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          balance: responseJson.balance
-        }, () => {
-          return fetch(ENDPOINT + '/energysupplier/getEstokensByEnergySupplier', {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              yourAddress: params.energySupplierAddress
-            })
-          })
-          .then((response) => response.json())
-          .then((responseJson) => {
-            console.log(responseJson)
-            this.setState({
-              isLoading: false,
-              energySystemTokens: responseJson
-            });
-          })
-          .catch((error) => {
-            console.log(error);
-            this.setState({
-              isLoading: false
-            }, function() {
-              Alert.alert(
-                'Error',
-                'An error occured while fetching all energy system tokens! Please try again in a few seconds.',
-                [
-                  {text: 'OK', onPress: () => console.log('OK Pressed')}
-                ],
-                { cancelable: false }
-              )
-            });
-          });
-        });
-      })
-      .catch((error) => {
-        console.log(error);
-        this.setState({
-          isLoading: false
-        }, function() {
-          Alert.alert(
-            'Error',
-            'An error occured while fetching kwh token balance! Please try again in a few seconds.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        });
-      });
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
-    const { navigate } = this.props.navigation
-    const { params } = this.props.navigation.state
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.baseText1}>Energy Amount:</Text>
-        <Text style={Styles.baseText3}>{this.state.balance}</Text>
-        <Text style={Styles.baseText4}>Beteiligungen:</Text>
-        <FlatList style={Styles.list}
-          data={this.state.energySystemTokens}
-          renderItem={({item}) => 
-            <Button style={Styles.item} onPress={() => navigate('EnergySupplierEnergySystemToken', { energySystemToken: item, energySupplierAddress: params.energySupplierAddress, balance: this.state.balance })} title={'EnergySystemToken: ' + item.estoken + ' Share: ' + item.balance}/>
-          }
-        />
-        <Button style={Styles.item} onPress={() => navigate('EnergySupplierEnergySystemTokenNeu', { energySupplierAddress: params.energySupplierAddress })} title={'New Token'}/>
-        <Button style={Styles.item} onPress={() => navigate('EnergySupplierTransactions', { energySupplierAddress: params.energySupplierAddress })} title={'All Transactions'}/>
-      </View>
-    );
-  }
-}
-
-class EnergySupplierTransactions extends React.Component {
-  static navigationOptions = {
-    title: "EnergySupplierTransactions",
-    headerTintColor: "#fff",
-    headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
-    }
-  }
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoading: true,
-      disburses: []
-    }
-  }
-
-  componentDidMount() {
-    const { params } = this.props.navigation.state
-    return fetch(ENDPOINT + '/energysupplier/getDisbursesPerESToken')
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          disburses: responseJson
-        })
-      })
-      .catch((error) => {
-        console.log(error);
-        this.setState({
-          isLoading: false
-        }, function() {
-          Alert.alert(
-            'Error',
-            'An error occured while fetching all disburses! Please try again in a few seconds.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        });
-      });
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
-    const { navigate } = this.props.navigation
-    const { params } = this.props.navigation.state
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.baseText4}>All Disburses:</Text>
-        <FlatList style={Styles.list}
-          data={this.state.disburses}
-          renderItem={({item}) => 
-            <Text style={Styles.item} title={'Timestamp: ' + item.timestamp + ' Income: ' + item.disburseAmount}/>
-          }
-        />
-      </View>
-    );
-  }
-}
-
-class EnergySupplierEnergySystemToken extends React.Component {
-  static navigationOptions = {
-    title: "EnergySupplierEnergySystemToken",
-    headerTintColor: "#fff",
-    headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
-    }
-  }
-
-  constructor(props) {
-    super(props)
-    const { params } = props.navigation.state
-    let disburseValueList  = []
-    for (var i = 1; i <= params.balance; i++) {
-      disburseValueList.push(i)
-    }
-    this.state = {
-      isLoading: false,
-      disburseValueList: disburseValueList,
-      disburseValue: null
-    }
-  }
-
-  onDisburse(disburseValue) {
-    // check if some other action is currently processing
-    if (this.state.isLoading) {
-      Alert.alert(
-        'Warning',
-        'Some other action is currently processing! Please try again in a few seconds.',
-        [
-          {text: 'OK', onPress: () => console.log('OK Pressed')}
-        ],
-        { cancelable: false }
-      )
-      return
-    }
-
-    //////
-    // push to server
-    //////
-
-    const { navigate } = this.props.navigation
-    const { params } = this.props.navigation.state
-
-    // -> request new insurance
-    this.setState({
-      isLoading: true
-    }, () => {
-      return fetch(ENDPOINT + '/energysupplier/disburse', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          estoken: params.energySystemToken.estoken,
-          value: disburseValue
-        })
-      })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          isLoading: false
-        }, () => {
-          Alert.alert(
-            'Success',
-            'Tokens disbursed!',
-            [
-              {text: 'OK', onPress: () => navigate('InsurantHome')}
-            ],
-            { cancelable: false }
-          )
-          navigate('EnergySupplierHome')
-        })
-      })
-      .catch((error) => {
-        console.log(error)
-        this.setState({
-          isLoading: false
-        }, () => {
-          Alert.alert(
-            'Error',
-            'Tokens could not be disbursed! Please try again.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        })
-      });
-    })
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
-    const { params } = this.props.navigation.state;
-    const { navigate } = this.props.navigation;
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Value:</Text>
-        <View style={{flexDirection: 'row'}}>
-          <View style={{flex: 1}}>
-            <Picker style={Styles.picker2}
-               onValueChange={(disburseValue) => this.setState({disburseValue})}>
-              {this.state.disburseValueList.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
-              })}
-            </Picker>
-          </View>
-        </View>
-        <Button style={Styles.item} onPress={() => this.onDisburse(this.state.disburseValue)} title={'Disburse Tokens'}/>
-        <Button style={Styles.item} onPress={() => navigate('EnergySupplierTokenTransactions', { energySystemToken: params.energySystemToken, energySupplierAddress: params.energySupplierAddress })} title={'Transaction History'}/>
-      </View>
-    );
-  }
-}
-
-class EnergySupplierTokenTransactions extends React.Component {
-  static navigationOptions = {
-    title: "EnergySupplierTokenTransactions",
-    headerTintColor: "#fff",
-    headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
-    }
-  }
-
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoading: true,
-      disburses: []
-    }
-  }
-
-  componentDidMount() {
-    const { params } = this.props.navigation.state
-    return fetch(ENDPOINT + '/energysupplier/getDisbursesPerESToken', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          estoken: params.energySystemToken.estoken
-        })
-      })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          disburses: responseJson
-        })
-      })
-      .catch((error) => {
-        console.log(error);
-        this.setState({
-          isLoading: false
-        }, function() {
-          Alert.alert(
-            'Error',
-            'An error occured while fetching all disburses! Please try again in a few seconds.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        });
-      });
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
-    const { navigate } = this.props.navigation
-    const { params } = this.props.navigation.state
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.baseText4}>All Disburses:</Text>
-        <FlatList style={Styles.list}
-          data={this.state.disburses}
-          renderItem={({item}) => 
-            <Text style={Styles.item} title={'Timestamp: ' + item.timestamp + ' Income: ' + item.disburseAmount}/>
-          }
-        />
-      </View>
-    );
-  }
-}
-
-class EnergySupplierEnergySystemTokenNeu extends React.Component {
-  static navigationOptions = {
-    title: "EnergySupplierEnergySystemTokenNeu",
-    headerTintColor: "#fff",
-    headerStyle: {
-      backgroundColor: 'blue', 
-      elevation: null,
-    }
-  }
-
-  constructor(props) {
-    super(props)
-    const { params } = props.navigation.state
-    this.state = {
-      isLoading: false,
-      accounts: [],
-      selectedAccounts: []
-    }
-  }
-
-  componentDidMount() {
-    // fetch all accounts
-    return fetch(ENDPOINT + '/general/getAllAccounts')
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          accounts: responseJson.accounts
-        })
-      })
-      .catch((error) => {
-        console.log(error);
-        this.setState({
-          isLoading: false
-        }, function() {
-          Alert.alert(
-            'Error',
-            'An error occured while fetching all accounts! Please try again in a few seconds.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        })
-      })
-  }
-
-  onCreate(shareholders, tokenAmount) {
-    // check if some other action is currently processing
-    if (this.state.isLoading) {
-      Alert.alert(
-        'Warning',
-        'Some other action is currently processing! Please try again in a few seconds.',
-        [
-          {text: 'OK', onPress: () => console.log('OK Pressed')}
-        ],
-        { cancelable: false }
-      )
-      return
-    }
-
-    //////
-    // push to server
-    //////
-
-    const { navigate } = this.props.navigation
-    const { params } = this.props.navigation.state
-
-    // -> request new insurance
-    this.setState({
-      isLoading: true
-    }, () => {
-      return fetch(ENDPOINT + '/energysupplier/createESToken', {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          estoken: params.energySupplierAddress,
-          shareholders: shareholders,
-          tokenAmount: tokenAmount
-        })
-      })
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log(responseJson)
-        this.setState({
-          isLoading: false
-        }, () => {
-          Alert.alert(
-            'Success',
-            'Token created!',
-            [
-              {text: 'OK', onPress: () => navigate('InsurantHome')}
-            ],
-            { cancelable: false }
-          )
-          navigate('EnergySupplierHome')
-        })
-      })
-      .catch((error) => {
-        console.log(error)
-        this.setState({
-          isLoading: false
-        }, () => {
-          Alert.alert(
-            'Error',
-            'Tokens could not be created! Please try again.',
-            [
-              {text: 'OK', onPress: () => console.log('OK Pressed')}
-            ],
-            { cancelable: false }
-          )
-        })
-      });
-    })
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View style={{flex: 1, paddingTop: 20}}>
-          <ActivityIndicator />
-        </View>
-      );
-    }
-
-    const { params } = this.props.navigation.state;
-    const { navigate } = this.props.navigation;
-    return (
-      <View style={Styles.container}>
-        <Text style={Styles.baseText4}>Add Shareholder:</Text>
-        <View style={{flexDirection: 'row'}}>
-          <View style={{flex: 1}}>
-            <Picker style={Styles.picker2}
-                onValueChange={(shareholder) => {
-                  let selectedAccounts = this.state.selectedAccounts
-                  selectedAccounts.push(shareholder)
-                  this.setState({selectedAccounts})
-                }}>
-              {this.state.accounts.map((i) => {
-                return <Picker.Item key={i} value={i} label={i}/>
-              })}
-            </Picker>
-          </View>
-        </View>
-        <Button style={Styles.item} onPress={() => this.onCreate(this.state.selectedAccounts, 100)} title={'Create Token'}/>
       </View>
     );
   }
@@ -1422,17 +684,14 @@ class EnergySupplierEnergySystemTokenNeu extends React.Component {
 
 export default App = StackNavigator({
   Login: { screen: Login },
-  ShareholderHome: { screen: ShareholderHome },
-  ShareholderPayOutTokens: { screen: ShareholderPayOutTokens },
-  ShareholderSendTokens: { screen: ShareholderSendTokens },
-  ShareholderTransactions: { screen: ShareholderTransactions },
-  ShareholderEnergySystemToken: { screen: ShareholderEnergySystemToken },
-  ShareholderTokenTransactions: { screen: ShareholderTokenTransactions },
-  EnergySupplierHome: { screen: EnergySupplierHome },
-  EnergySupplierTransactions: { screen: EnergySupplierTransactions },
-  EnergySupplierEnergySystemToken: { screen: EnergySupplierEnergySystemToken },
-  EnergySupplierTokenTransactions: { screen: EnergySupplierTokenTransactions },
-  EnergySupplierEnergySystemTokenNeu: { screen: EnergySupplierEnergySystemTokenNeu }
+  Home: { screen: Home },
+  Profile: { screen: Profile },
+  Investments: { screen: Investments },
+  Search: { screen: Search },
+  Contract: { screen: Contract },
+  CreateContract: { screen: CreateContract },
+  ContractSearch: { screen: ContractSearch },
+  InvestorContracts: { screen: InvestorContracts }
 });
 
 const Styles = StyleSheet.create({
